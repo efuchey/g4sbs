@@ -1377,6 +1377,10 @@ void G4SBSMessenger::SetNewValue(G4UIcommand* cmd, G4String newValue){
       fExpType = G4SBS::kALL;
       validcmd = true;
     }
+    if( newValue.compareTo("phi") == 0 ){
+      fExpType = G4SBS::kPhiExp;
+      validcmd = true;
+    }
 
     if( validcmd ){
       fdetcon->SetExpType( fExpType );
