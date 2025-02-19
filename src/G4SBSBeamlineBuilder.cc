@@ -90,6 +90,14 @@ void G4SBSBeamlineBuilder::BuildComponent(G4LogicalVolume *worldlog){
       MakeALLLead(worldlog);
     }
     break;
+  case(G4SBS::kPhiExp):// SIDIS
+    fDetCon->fBeamlineConf = 3;
+    MakeGMnBeamline(worldlog);
+    if(fDetCon->fLeadOption == 1){
+      //Sseeds - leaving option in, but removing obsolete geometry
+      MakeSIDISLead(worldlog);
+    }
+    break;
   case(G4SBS::kGEMHCtest):// Hall C GEM test
     fDetCon->fBeamlineConf = 3;
     MakeGMnBeamline(worldlog);
