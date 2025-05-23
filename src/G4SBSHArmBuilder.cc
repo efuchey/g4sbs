@@ -140,7 +140,7 @@ void G4SBSHArmBuilder::BuildComponent(G4LogicalVolume *worldlog){
   }
 
   // Now build special components for experiments
-  if( exptype == G4SBS::kSIDISExp || G4SBS::kPhiExp) {
+  if( exptype == G4SBS::kSIDISExp || exptype == G4SBS::kPhiExp) {
     //SIDIS experiment requires a RICH detector and a tracker for SBS: 
     MakeTracker(worldlog);
     //MakeRICH( worldlog );
