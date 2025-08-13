@@ -27,7 +27,7 @@
 
 ## Configure standard detector settings
 /g4sbs/hcaldist        11.0 m
-/g4sbs/hcalvoffset     0.365 m
+/g4sbs/hcalvoffset     0.75 m
 /g4sbs/beamlineconfig  4                 ## set relevant beamline configuration
 /g4sbs/sbsclampopt     3                 ## Front field clamp only
 
