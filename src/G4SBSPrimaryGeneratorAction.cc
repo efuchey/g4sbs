@@ -96,8 +96,9 @@ void G4SBSPrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 	particleGun->SetParticlePosition( G4ThreeVector( Primaries.vx[ipart], Primaries.vy[ipart], Primaries.vz[ipart] ) );
 	particleGun->SetParticleTime( Primaries.t[ipart] );
 	particleGun->GeneratePrimaryVertex(anEvent);
+	//if(anEvent->GetTrajectoryContainer()->size()!=ngen)G4cout << " track number: " << (*(anEvent->GetTrajectoryContainer()))[ngen]->GetTrackID() << G4endl;
 	ngen++;
-      }
+      } 
     }
 
     //if( ngen <= 0 ) G4cout << "Warning: no primaries generated for event " << anEvent->GetEventID() << G4endl;

@@ -36,6 +36,7 @@ void G4SBSPythiaOutput::Clear(){
   W2 = 0.0;
 
   Nprimaries = 0;
+  TID.clear();
   PID.clear();
   genflag.clear();
   Px.clear();

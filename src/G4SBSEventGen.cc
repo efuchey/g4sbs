@@ -2514,10 +2514,12 @@ bool G4SBSEventGen::GeneratePythia(){
 	     fPythiaEvent.phi[ngood] >= fPhMin_had && fPythiaEvent.phi[ngood] <= fPhMax_had &&
 	     fPythiaEvent.E[ngood] >= fEhadMin && fPythiaEvent.E[ngood] <= fEhadMax) ) ){ 
 	fPythiaEvent.genflag.push_back( 1 );
+	fPythiaEvent.TID.push_back( ngen+1 );
 	ngen++;
 	//G4cout << "located good event with one or more primary particles within generation limits" << G4endl;
       } else {
 	fPythiaEvent.genflag.push_back( 0 );
+	fPythiaEvent.TID.push_back( -1 );
       }
       ngood++;
     }

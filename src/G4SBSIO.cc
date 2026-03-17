@@ -788,6 +788,7 @@ void G4SBSIO::BranchPythia(){
   //Primary particle arrays:
   fTree->Branch("Primaries.Nprimaries",&(Primaries.Nprimaries),"Nprimaries/I");
   fTree->Branch("Primaries.PID",&(Primaries.PID));
+  fTree->Branch("Primaries.TID",&(Primaries.TID));
   fTree->Branch("Primaries.genflag",&(Primaries.genflag));
   fTree->Branch("Primaries.Px",&(Primaries.Px));
   fTree->Branch("Primaries.Py",&(Primaries.Py));

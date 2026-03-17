@@ -26,7 +26,7 @@ public:
   double W2; //photon-nucleon invariant mass.
 
   int Nprimaries; //Number of final state particles:
-  vector<int> PID, genflag; //PID code and flag (1 if particle was actually generated, 0 otherwise)
+  vector<int> PID, TID, genflag; //PID code and flag (1 if particle was actually generated, 0 otherwise)
   vector<double> Px, Py, Pz, M, E, P, t, vx, vy, vz, theta, phi;
   
 };
