@@ -49,7 +49,7 @@ G4SBSECal::G4SBSECal(G4SBSDetectorConstruction *dc):G4SBSComponent(dc){
   fAng = 29.0*deg;
   fDist = 4.9*m;
   fVOff = 0.0*cm;
-  fHOff = -2.25*2.54*cm;//default ecal positioning along crystal center
+  fHOff = -2.341*2.54*cm;//default ecal positioning along crystal center
 
   fnzsegments_leadglass_ECAL = 1;
   fnzsegments_leadglass_C16 = 1;
@@ -983,9 +983,7 @@ void G4SBSECal::MakeECal_new(G4LogicalVolume *motherlog){
 
 */
 //KIP CUTOFF///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Workspace for Kip updating the ECal Geometry, this is an edited version of what is above for the MakeECal_new code, if messed up, uncomment where its labelled KIP CUTOFF and comment out everything in the KIP workspace below
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////KIP
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////KIP
+//Workspace for Kip updating the ECal Geometry, this is an edited version of what is above for the MakeECal_new code,
 void G4SBSECal::MakeECal_new(G4LogicalVolume *motherlog){
   // Define the inch
   G4double inch = 2.54*cm;
@@ -1289,7 +1287,7 @@ void G4SBSECal::MakeECal_new(G4LogicalVolume *motherlog){
 			       -50.81*cm, -50.81*cm, -50.81*cm, -50.81*cm, -50.81*cm, -50.81*cm, -50.81*cm, -50.81*cm, -50.81*cm, -58.60*cm,
 			       -54.97*cm, -58.76*cm, -55.13*cm};// from bottom to top
   */
-  G4double yfp_start_42[23] = {-58.73*cm, -54.61*cm, -58.73*cm, -54.61*cm, -58.73*cm, -52.87*cm, -53.02*cm, -53.02*cm, -53.02*cm, -53.02*cm, 
+  G4double yfp_start_42[23] = {-58.73*cm, -54.61*cm, -58.73*cm, -54.61*cm, -58.89*cm, -52.87*cm, -53.02*cm, -53.02*cm, -53.02*cm, -53.02*cm, 
 			       -53.02*cm, -53.02*cm, -53.02*cm, -53.02*cm, -53.02*cm, -53.02*cm, -53.02*cm, -53.02*cm, -53.02*cm, -58.73*cm,
 			       -54.29*cm, -58.73*cm, -54.29*cm};// from bottom to top, make these match center frame measurement from Don Jones, thus the user command shift is relative to frame center, by default this shift is -2.25in to put ecal at crystal center
   //for(int i = 0; i < 23; i++){
@@ -1304,13 +1302,18 @@ void G4SBSECal::MakeECal_new(G4LogicalVolume *motherlog){
   //xfp and yfp are following the analysis coordinate system, not the same as g4 coord system
   
   //xfpstart based on center of ECal JT model
-  G4double xfpstart = -147.22*cm;
+  //G4double xfpstart = -147.22*cm;
+  G4double xfpstart = -149.108*cm; //Updated to match new block spacing and Kin. 3 survey offset. 
   G4int copy_nb = 0;
   G4double X_block, Y_block;
 
-  //the width(or height) of a SM is defined elsewhere as 5.06in, however everything seems to be properly alligned only when using 5.04in
+  //the width(or height) of a SM is defined elsewhere as 5.06in, however everything seems to be properly alligned only when using 5.07in
+  //previously (with just th 5.07in height of SM assumption) we were not including the effective vertical spacing as measured by Don Jones in the hall which is basically 2x the Ti wall thickness despite there being no actual Ti walls above or below the lead-glass array in the SM
   G4double width42 = 5.134*2.54*cm;
-  G4double height42 = 5.07*2.54*cm;
+  G4double height42_noTiSpacing = 5.07*2.54*cm;
+  G4double TiWallSpace = 2.0*0.032*2.54*cm;
+  G4double height42 = height42_noTiSpacing + TiWallSpace;
+  //G4double height42 = 5.07*2.54*cm;
   G4double depthInactive = 15.75*2.54*cm;
   G4double inactiveBox_width = 54.42*2.54*cm;
   G4double inactiveBox_height = 125.12*2.54*cm;
@@ -1902,6 +1905,8 @@ void G4SBSECal::MakeECal_new(G4LogicalVolume *motherlog){
       copy_nb++;
     }
     X_block+= BlockSpace_42;
+    if(i_%3==2)X_block+= 2*TiWallThick;
+    //there are no Ti walls on the top and botom of the SM module frame, only the sides. However after reviewing hand-measurements by Don Jones of ECal in the hall, it seems there is an effective vertical offset for which this simulation did not previously account. Therefore we are adding this vertical spacing such that the sim matches the real measurements; this will hopefully fix the spurious correlation seen in optics reconstruction between dx(vertical hit position as determined by ecal minus vertical hit position as determined by tracking) and x-ecal.
   }
   
   /*
