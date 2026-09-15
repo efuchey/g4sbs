@@ -6,7 +6,7 @@
 
 ## Configure the target
 /g4sbs/target          LH2
-/g4sbs/targlen         30.0 cm           ## Target Length
+/g4sbs/targlen         45.0 cm           ## Target Length
 #/g4sbs/targpos         0.0 0.0 -9.0 cm   # target z offset, -9 cm means shift target UPSTREAM
 # account for horizontal mispointing of SBS by shifting target further upstream? probably works for SBS but not quite right for ECAL...
 # if ECAL is shifted 7 mm toward beam right relative to ideal, then its ideal center is pointing about 1.5 cm downstream of ideal target center
