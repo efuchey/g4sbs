@@ -1,21 +1,29 @@
 ## Configure G4SBS for TDIS
-##/g4sbs/filename        tdis_h2_beambkgd_4.7T.root   ## Output rootfile
+##/g4sbs/filename        tdis_h2_elastic_1.5T.root   ## Output rootfile
 
 ## Configure Experiment
 /g4sbs/exp             tdis
 
 ## Configure the target
-/g4sbs/target          H2
+/g4sbs/target          D2
 /g4sbs/targlen         40.0 cm           ## Target Length
 /g4sbs/targdiam        1.0 cm          ## Target Diameter
 /g4sbs/tdistgtwallthick 0.02 mm
 
-## Configure generator settings
-/g4sbs/kine            beam
 
-/g4sbs/particle        proton
+/g4sbs/kine            wiser
+/g4sbs/hadron          pi-
+/g4sbs/rejectionsampling true
+
 /g4sbs/beamE	       11.0 GeV
 
+# pion energy range 
+/g4sbs/hthmin           5.0 deg
+/g4sbs/hthmax         175.0 deg
+/g4sbs/hphmin        -180.0 deg
+/g4sbs/hphmax         180.0 deg
+/g4sbs/ehmin           0.05 GeV
+/g4sbs/ehmax            1.5 GeV
 
 ## Configure standard detector settings
 /g4sbs/hcaldist        7.0 m
@@ -42,14 +50,18 @@
 
 /g4sbs/solunifield	true
 /g4sbs/solunimag	4.7
+#/g4sbs/solunimag	1.5
 #/g4sbs/soltoscafield	true
 #/g4sbs/soltoscascale	1.0
 #/g4sbs/soltoscaoffset	200.0 mm
 
 /g4sbs/treeflag 1
-/g4sbs/totalabs false
+/g4sbs/totalabs true
+
+#/g4sbs/steplimit LACmod_log 1 
+#/g4sbs/steplimit log_HCAL
 
 /g4sbs/keepsdtrackinfo all true
 
 ## Run xxx events
-##/g4sbs/run           500000
+##/g4sbs/run           10000

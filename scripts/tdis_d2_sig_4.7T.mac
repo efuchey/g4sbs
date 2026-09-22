@@ -1,5 +1,5 @@
 ## Configure G4SBS for TDIS
-/g4sbs/filename        tdis_d2_4.7T.root   ## Output rootfile
+##/g4sbs/filename        tdis_h2_4.7T.root   ## Output rootfile
 
 ## Configure Experiment
 /g4sbs/exp             tdis
@@ -11,10 +11,6 @@
 /g4sbs/tdistgtwallthick 0.02 mm
 
 ## Configure generator settings
-# pythia6 -> make use of Pythia generator file
-# /g4sbs/pythia6file <pythia_events_.root> FILE WITH PYTHIA EVENTS
-
-
 # LIST OF TDIS KINEMATICS
 # tdisgen -> original generator
 # tdisela -> new tdis elastic
@@ -25,13 +21,6 @@
 # tdiskinD -> new TDIS (deuterium)
 
 /g4sbs/kine            tdiskinD
-
-
-# when using pythia the rest of variables are irrelevant
-# /g4sbs/kine             pythia6
-
-# IN THIS FARM DIRECTORY, THERE ARE MANY PYTHIA FILES COMPILED BY ANDREW
-#/g4sbs/pythia6file /w/halla-scifs17exp/sbs/puckett/Pythia6_11GeV_proton_target/Pythia6_minbias_protontarget_E11GeV_job1.root
 
 /g4sbs/particle        proton
 /g4sbs/beamE	       11.0 GeV
@@ -44,10 +33,10 @@
 # SO NEXT VARIABLES ARE USELESS (TO BE CHANGED)
 
 # electron angles range
-/g4sbs/thmin           0.01 deg
-/g4sbs/thmax           90.0 deg
-/g4sbs/phmin        -180.0 deg
-/g4sbs/phmax         180.0 deg
+/g4sbs/thmin           4.0 deg
+/g4sbs/thmax          24.0 deg
+/g4sbs/phmin        -120.0 deg
+/g4sbs/phmax         240.0 deg
 
 # hadron angles range 
 /g4sbs/hthmin     10.0 deg
@@ -70,9 +59,13 @@
 
 
 ## Configure standard detector settings
-/g4sbs/lacdist       10.5 m
-/g4sbs/lacvoffset     0.40 m
-/g4sbs/lachoffset    -0.20 m
+/g4sbs/hcaldist        7.0 m
+/g4sbs/hcalvoffset     0.75 m
+/g4sbs/hcalhoffset    -0.20 m
+/g4sbs/hcalpsconfig   -1
+/g4sbs/hcalpsvoffset   0.75 m
+/g4sbs/hcalpshoffset   0.00 m
+
 /g4sbs/sbstrkrdist     4.4 m
 /g4sbs/sbstrkrpitch    5.0 deg
 
@@ -96,9 +89,8 @@
 
 /g4sbs/treeflag 1
 /g4sbs/totalabs true
-#/g4sbs/steplimit LACmod_log 1 
 
 /g4sbs/keepsdtrackinfo all true
 
 ## Run xxx events
-/g4sbs/run           10000
+##/g4sbs/run           10000
