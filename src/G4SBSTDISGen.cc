@@ -894,7 +894,7 @@ void G4SBSTDISGen::GenerateFinalStateTDIS(Kine_t Kine,G4LorentzVector ei )
   //  pt  = CLHEP::RandFlat::shoot(0.0, 0.5*GeV);
 
   // I changed it to MeV in order to be consistent with the next calculation (CA)
-  pt  = CLHEP::RandFlat::shoot(50.0, 500*MeV);// corrected from the proposal, was 0-500 MeV
+  pt  = CLHEP::RandFlat::shoot(50.0*MeV, 500.0*MeV);// corrected from the proposal, was 0-500 MeV
   
   // I am assuming that this z is the same as the one in SIDIS
   // but here is randomize
