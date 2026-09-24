@@ -12,6 +12,7 @@
 
 ## Configure generator settings
 /g4sbs/kine            elastic
+/g4sbs/beamE	       11.0 GeV
 /g4sbs/rejectionsampling true
 
 # electron angles range

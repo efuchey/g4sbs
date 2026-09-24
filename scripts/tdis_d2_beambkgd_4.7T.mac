@@ -12,8 +12,6 @@
 
 ## Configure generator settings
 /g4sbs/kine            beam
-
-/g4sbs/particle        proton
 /g4sbs/beamE	       11.0 GeV
 
 
