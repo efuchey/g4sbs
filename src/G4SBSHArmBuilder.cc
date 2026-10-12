@@ -142,7 +142,8 @@ void G4SBSHArmBuilder::BuildComponent(G4LogicalVolume *worldlog){
   // Now build special components for experiments
   if( exptype == G4SBS::kSIDISExp || exptype == G4SBS::kPhiExp) {
     //SIDIS experiment requires a RICH detector and a tracker for SBS: 
-    MakeTracker(worldlog);
+    //MakeTracker(worldlog);
+    MakeTracker_MWPC(worldlog, 3);
     //MakeRICH( worldlog );
     MakeRICH_new( worldlog );
   } else if ( exptype == G4SBS::kGEp || exptype == G4SBS::kGEPpositron || exptype == G4SBS::kGEp_BB ) {
@@ -151,8 +152,7 @@ void G4SBSHArmBuilder::BuildComponent(G4LogicalVolume *worldlog){
   } 
   
   if( exptype == G4SBS::kALL) {
-    
-    MakeTracker(worldlog, 8);
+        MakeTracker(worldlog, 8);
     
   }
   
@@ -2402,6 +2402,77 @@ void G4SBSHArmBuilder::MakeTracker(G4LogicalVolume *motherlog, G4int nplanes){
 
   SBStracker_log->SetVisAttributes(G4VisAttributes::GetInvisible());
 }
+
+void G4SBSHArmBuilder::MakeTracker_MWPC(G4LogicalVolume *motherlog, G4int nplanes){
+  //      G4double SBStracker_dist = fRICHdist - 0.3*m; //distance to the front of the SBS tracker
+  
+  //TODO: slide a wire chamber in there
+  //      G4double SBStracker_dist = fRICHdist - 0.3*m; //distance to the front of the SBS tracker
+  
+  G4ThreeVector SBS_midplane_pos( -(f48D48dist + 0.5*f48D48depth)*sin(f48D48ang), 0.0, (f48D48dist+0.5*f48D48depth)*cos(f48D48ang) );
+
+  G4RotationMatrix *SBStracker_rot_I = new G4RotationMatrix(G4RotationMatrix::IDENTITY);
+
+  //Just a test:
+  //SBStracker_rot_I->rotateY( 14.0*deg );
+
+  G4RotationMatrix *SBStracker_rot = new G4RotationMatrix;
+  SBStracker_rot->rotateY( f48D48ang );
+  SBStracker_rot->rotateX( fSBS_tracker_pitch );
+
+  int nmwpc_SBStracker = nplanes;
+  G4double zspacing_SBStracker = 10.0*cm;
+  G4double zoffset_SBStracker = -(nmwpc_SBStracker-1)*zspacing_SBStracker/2.0;
+  G4double LtrackerBox = (nmwpc_SBStracker-1)*zspacing_SBStracker+6.0*cm;
+  printf("%f cm %f c,\n", zoffset_SBStracker/cm, LtrackerBox/2.0/cm);
+  
+  G4Box *SBStracker_box = new G4Box("SBStracker_box", 35.0*cm, 110.0*cm, LtrackerBox/2.0 );
+
+  G4LogicalVolume *SBStracker_log = new G4LogicalVolume( SBStracker_box, GetMaterial("Air"), "SBStracker_log" );
+
+  //G4double RICH_yoffset = (fRICHdist - (f48D48dist + 0.5*f48D48depth) )*sin( fSBS_tracker_pitch );
+  //We want the center of the first tracker plane to be directly above the point at a distance D along the SBS center line
+  //from the target:
+  // xmidplane + L*sin
+
+  G4double Tracker_yoffset = (fSBS_tracker_dist - (f48D48dist + 0.5*f48D48depth) )*tan(fSBS_tracker_pitch);
+
+  G4ThreeVector FirstPlane_pos( -fSBS_tracker_dist*sin(f48D48ang),
+				Tracker_yoffset,
+				fSBS_tracker_dist*cos(f48D48ang) );
+  
+  G4ThreeVector SBS_tracker_axis = (FirstPlane_pos - SBS_midplane_pos).unit();
+			     
+  
+  // G4ThreeVector RICH_pos( -fRICHdist*sin(f48D48ang), RICH_yoffset, fRICHdist*cos(f48D48ang) );
+
+  // G4ThreeVector SBS_tracker_axis = (RICH_pos - SBS_midplane_pos).unit();
+  // G4ThreeVector SBS_tracker_pos = RICH_pos - 0.3*m*SBS_tracker_axis;
+
+  G4ThreeVector SBS_tracker_pos = FirstPlane_pos - zoffset_SBStracker*SBS_tracker_axis;
+  
+  printf("sbs_tracker_pos: %f, %f, %f\n", SBS_tracker_pos.x(), SBS_tracker_pos.y(), SBS_tracker_pos.z() );
+  
+  new G4PVPlacement( SBStracker_rot, SBS_tracker_pos, SBStracker_log, "SBStracker_phys", motherlog, false, 0 );
+
+  vector<double> zplanes_SBStracker, wplanes_SBStracker, hplanes_SBStracker;
+
+  for(int i=0; i<nmwpc_SBStracker; i++ ){
+    zplanes_SBStracker.push_back( zoffset_SBStracker + i*zspacing_SBStracker );
+    wplanes_SBStracker.push_back( 60.0*cm );
+    hplanes_SBStracker.push_back( 211.0*cm );
+  }
+
+  G4SBSTrackerBuilder trackerbuilder(fDetCon);
+
+  //(fDetCon->TrackerArm)[fDetCon->TrackerIDnumber] = kHarm; //H arm is "1"
+
+  trackerbuilder.BuildComponent_MWPC( SBStracker_log, SBStracker_rot_I, G4ThreeVector(0,0,0), 
+  				      nmwpc_SBStracker, zplanes_SBStracker, wplanes_SBStracker, hplanes_SBStracker, G4String("Harm/SBSMWPC") );
+
+  SBStracker_log->SetVisAttributes(G4VisAttributes::GetInvisible());
+}
+
 
 void G4SBSHArmBuilder::MakeElectronModeSBS(G4LogicalVolume *motherlog){
   MakeTracker( motherlog );

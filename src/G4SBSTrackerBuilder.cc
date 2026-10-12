@@ -27,6 +27,16 @@
 G4SBSTrackerBuilder::G4SBSTrackerBuilder(G4SBSDetectorConstruction *dc):G4SBSComponent(dc){
   fFrontTrackerZoffset = 0.0;
   fFrontTrackerZoffsetIsSet = false;
+
+  fMWPC_NplaneWires = 6;//
+  fMWPC_NWiresPerPlane = 1000;//
+  fMWPC_InterWireGap = 2.0*mm;//1.0*mm;//
+  fMWPC_SupportThickness = 2.0*mm;//1.6*mm;//
+  fMWPC_SupportWidth = 1.*cm;
+  fMWPC_CathodeMylarThickness = 0.001*mm;//0.001*mm;//1.0 um Mylar
+  fMWPC_CathodeAlThickness =    0.00001*mm; //0.01um Al;//
+  fMWPC_WirePlaneThickness =    0.008*mm;//8 um wires;//
+  fChkOvLaps = false;//true;for debugging
 }
 
 G4SBSTrackerBuilder::~G4SBSTrackerBuilder(){;}
@@ -254,3 +264,348 @@ void G4SBSTrackerBuilder::BuildComponent(G4LogicalVolume *Mother, G4RotationMatr
 }
 
 
+//
+void G4SBSTrackerBuilder::BuildComponent_MWPC(G4LogicalVolume *Mother, G4RotationMatrix *rot, G4ThreeVector pos, unsigned int nplanes, vector<double> zplanes, vector<double> wplanes, vector<double> hplanes, G4String SDname, G4bool ispolarimeter, G4double yoffset ) 
+{
+  //This routine will create and position a MWPC tracker consisting of nplanes planes centered at position pos oriented with rotation rot wrt logical volume Mother. 
+  //The list of z coordinates, widths and heights of the planes are passed as arguments:
+
+  // How should we interpret the rotation Matrix rot? It is the rotation that orients the z axis of the tracker with respect to the mother volume. 
+  // Since pos is the nominal position of the tracker with respect to the mother volume, 
+  // the positioning of the centers of the tracker planes should be pos + zplane * tracker_zaxis
+  G4ThreeVector zaxis(0,0,1);
+  G4ThreeVector yaxis(0,1,0);
+  
+  zaxis *= rot->inverse();
+
+  double WireOffset[2] = {0.0, -fMWPC_InterWireGap*0.5};
+  double WirePitch[3] = {0.0*deg, -10.0*deg, +10.0*deg};
+  
+  G4VisAttributes *mwpcvisatt = new G4VisAttributes( G4Colour( 1.0, 0.0, 0.0 ) );
+
+  mwpcvisatt->SetForceWireframe(true);
+
+  for(int i = 0; i<nplanes; i++){
+    //each wire chamber has
+    G4double gap = 0.0*mm;
+    G4double MWPC_z_total = (fMWPC_SupportThickness*2+fMWPC_CathodeMylarThickness+fMWPC_CathodeAlThickness*2+fMWPC_WirePlaneThickness+gap*4)*fMWPC_NplaneWires+fMWPC_CathodeMylarThickness+fMWPC_CathodeAlThickness*2+fMWPC_SupportThickness*2+gap*4;
+
+    G4Box* MWPCmother_box = new G4Box("MWPCmother_solid",
+				      wplanes[i]*0.5+fMWPC_SupportWidth+1.0*mm,
+				      hplanes[i]*0.5+fMWPC_SupportWidth+1.0*mm,
+				      MWPC_z_total);
+
+    G4LogicalVolume* MWPCmother_log = 
+      new G4LogicalVolume(MWPCmother_box, 
+			  GetMaterial("MWPCgas"),
+			  "MWPCmother_log");
+    MWPCmother_log->SetVisAttributes(mwpcvisatt);
+    new G4PVPlacement(0, 
+		      G4ThreeVector(0.0, yoffset, zplanes[i]), 
+		      MWPCmother_log,
+		      "MWPCmother_phys", 
+		      Mother, 
+		      false, 
+		      0, 
+		      fChkOvLaps);
+    
+    G4double zpos = -MWPC_z_total*0.5 + fMWPC_SupportThickness*0.5+gap;
+    G4double theta = 0.0*deg;
+    G4cout << "MWPC delta Z " << MWPC_z_total << " Z position = " << zpos/mm << " mm " << endl;
+    //starting with one G10 support
+    BuildMWPCG10Support(MWPCmother_log, wplanes[i], hplanes[i], zpos);
+    for(int k = 0; k<fMWPC_NplaneWires; k++){
+      zpos+= (fMWPC_SupportThickness+fMWPC_CathodeMylarThickness)*0.5+fMWPC_CathodeAlThickness+gap;
+      G4cout << " Z position = " << zpos/mm << " mm " << endl;
+      BuildMWPCCathode(MWPCmother_log, wplanes[i], hplanes[i], zpos);
+      zpos+= (fMWPC_CathodeMylarThickness+fMWPC_SupportThickness)*0.5+fMWPC_CathodeAlThickness+gap;
+      G4cout << " Z position = " << zpos/mm << " mm " << endl;
+      BuildMWPCG10Support(MWPCmother_log, wplanes[i], hplanes[i], zpos);
+      zpos+= (fMWPC_SupportThickness+fMWPC_WirePlaneThickness)*0.5+gap;
+      G4cout << " Z position = " << zpos/mm << " mm " << endl;
+      BuildMWPCWires(MWPCmother_log, wplanes[i], hplanes[i], zpos, WirePitch[k/2], WireOffset[k%2], i*fMWPC_NplaneWires+k, SDname);
+      zpos+= (fMWPC_WirePlaneThickness+fMWPC_SupportThickness)*0.5+gap;
+      G4cout << " Z position = " << zpos/mm << " mm " << endl;
+      BuildMWPCG10Support(MWPCmother_log, wplanes[i], hplanes[i], zpos);
+    }
+    //after building all wires, capping with a cathode plane and a G10 support plane
+    zpos+= (fMWPC_SupportThickness+fMWPC_CathodeMylarThickness)*0.5+fMWPC_CathodeAlThickness+gap;
+    G4cout << " Z position = " << zpos/mm << " mm " << endl;
+    BuildMWPCCathode(MWPCmother_log, wplanes[i], hplanes[i], zpos);
+    zpos+= (fMWPC_CathodeMylarThickness+fMWPC_SupportThickness)*0.5+fMWPC_CathodeAlThickness+gap;
+    G4cout << " Z position = " << zpos/mm << " mm " << endl;
+    BuildMWPCG10Support(MWPCmother_log, wplanes[i], hplanes[i], zpos);
+  }
+
+}
+
+
+
+// EPAF 2026/09/16
+// Methods to build MWPC design components.
+void G4SBSTrackerBuilder::BuildMWPCWires(G4LogicalVolume *motherlog, G4double deltax, G4double deltay, G4double zPos, G4double angle, G4double wireoffset, G4int WirePlaneNum, G4String SDname)
+{
+  //fMWPC_NWiresPerPlane = deltay/fMWPC_InterWireGap-1;
+  G4cout << " delta y = " << deltay/mm << " mm; number of wires per plane: " << fMWPC_NWiresPerPlane << G4endl;
+  
+  G4Box* MWPCWiresGas_solid = 
+    new G4Box("MWPCWiresGas_solid", 
+	      deltax*0.5, deltay*0.5,
+	      fMWPC_SupportThickness+fMWPC_WirePlaneThickness*0.5);
+  
+  //mother volume for the wires...
+  G4LogicalVolume* MWPCWiresGas_log = 
+    new G4LogicalVolume(MWPCWiresGas_solid,
+			GetMaterial("MWPCgas"),
+			"MWPCWiresGas_log");
+  
+  new G4PVPlacement(0, 
+		    G4ThreeVector(0.0, 0.0, zPos), 
+		    MWPCWiresGas_log,
+		    "MWPCWiresGas_phys", 
+		    motherlog, 
+		    false, 
+		    WirePlaneNum, 
+		    fChkOvLaps);
+
+  G4VisAttributes *tpc_gas_visatt = new G4VisAttributes( G4Colour( 0.0, 0.75, 1.0) );
+  tpc_gas_visatt->SetForceWireframe(true);
+
+  G4VisAttributes *wire_visatt = new G4VisAttributes( G4Colour( 0.8, 0.75, 0.0) );
+  
+  MWPCWiresGas_log->SetVisAttributes( tpc_gas_visatt );
+  
+  //Split gas in cells for wires... will be tedious
+  //TODO: introduce pitch (rn, pitch is assumed 0 degrees, which is fine for our purpose)
+  G4Box* WireCell_box = 
+    new G4Box("WireCell_box",
+	      deltax,
+	      fMWPC_InterWireGap*0.5*cos(angle),
+	      fMWPC_SupportThickness+fMWPC_WirePlaneThickness*0.5);
+  
+  // G4Tubs* Wire_solid_base =
+  //   new G4Tubs("Wire_solid_base",
+  // 	       0,
+  // 	       fMWPC_WirePlaneThickness*0.5,
+  // 	       deltax,
+  // 	       0.*deg,
+  // 	       360.*deg);
+  
+  G4String MWPCSDname = SDname;
+  G4String MWPCcolname = "MWPCHitsCollection";
+  
+  G4SBSGEMSD* MWPCSD;
+  if( !(MWPCSD = (G4SBSGEMSD*) fDetCon->fSDman->FindSensitiveDetector(MWPCSDname)) ){ //Make sure SD with this name doesn't already exist
+    MWPCSD = new G4SBSGEMSD( MWPCSDname, MWPCcolname );
+    fDetCon->fSDman->AddNewDetector(MWPCSD);
+    (fDetCon->SDlist).insert(MWPCSDname);
+    fDetCon->SDtype[MWPCSDname] = G4SBS::kGEM;
+  }
+  fDetCon->InsertSDboundaryVolume( motherlog->GetName(), MWPCSDname );
+ 
+  for(int i = 0; i<fMWPC_NWiresPerPlane; i++){
+    G4double WirePosition = -fMWPC_InterWireGap*0.5*fMWPC_NWiresPerPlane+wireoffset+fMWPC_InterWireGap*i;
+    //G4double WirePosition = -fMWPC_InterWireGap*0.5*1000+wireoffset+fMWPC_InterWireGap*i;
+    G4cout << " wire position (mm): " << WirePosition/mm << G4endl;
+    //TODO: introduce pitch (rn, pitch is assumed 0 degrees)
+
+    G4Tubs* Wire_solid_base =
+      new G4Tubs("Wire_solid_base",
+		 0,
+		 fMWPC_WirePlaneThickness*0.5,
+		 deltax*0.5/cos(angle),
+		 0.*deg,
+		 360.*deg);
+    
+    G4RotationMatrix* RotationWire = new G4RotationMatrix();
+    RotationWire->rotateY(90.0*deg);
+    RotationWire->rotateX(angle);
+
+    G4IntersectionSolid* Wire_solid = 
+      new G4IntersectionSolid("Wire_solid",
+			      MWPCWiresGas_solid,
+			      Wire_solid_base,
+			      RotationWire,
+			      G4ThreeVector(0, 0, 0));
+    
+    G4RotationMatrix* RotationWireCell = new G4RotationMatrix();
+    RotationWireCell->rotateZ(angle);
+    
+    G4IntersectionSolid* WireCell_solid_0 =
+      new G4IntersectionSolid("WireCell_solid_0",
+			      MWPCWiresGas_solid,
+			      WireCell_box,
+			      RotationWireCell,
+			      G4ThreeVector(0, 0, 0));
+    
+    
+    G4SubtractionSolid* WireCell_solid =
+      new G4SubtractionSolid("WireCell_solid",
+			     WireCell_solid_0,
+			     Wire_solid_base,
+			     RotationWire,
+			     G4ThreeVector(0, 0, 0));
+    
+    G4LogicalVolume* WireCell_log = 
+      new G4LogicalVolume(WireCell_solid,
+			  GetMaterial("MWPCgas"),
+			  "WireCell_log");
+    
+    G4LogicalVolume* Wire_log = 
+      new G4LogicalVolume(Wire_solid_base, //Wire_solid,
+			  GetMaterial("Tungsten"),
+			  "Wire_log");
+    
+    WireCell_log->SetVisAttributes( tpc_gas_visatt );
+    Wire_log->SetVisAttributes( wire_visatt );
+
+    G4int WireUniqueID = WirePlaneNum*fMWPC_NWiresPerPlane+i;
+    //   //G4cout << " j "<<  j << " WireUniqueID " << WireUniqueID << " cos angle??? " << cos(angle+j*180.0*deg) << " sin angle??? " << sin(angle+j*180.0*deg) << G4endl; 
+
+    // G4RotationMatrix* RotationPlane = new G4RotationMatrix();
+    // RotationPlane->rotateZ(-angle+j*180.0*deg);
+    
+    new G4PVPlacement(0, 
+		      G4ThreeVector(0, WirePosition, 0),
+		      WireCell_log,
+		      "WireCell", 
+		      MWPCWiresGas_log, 
+		      false, 
+		      WireUniqueID, 
+		      fChkOvLaps
+		      );
+      
+    WireCell_log->SetSensitiveDetector(MWPCSD);
+    
+    // RotationWire = new G4RotationMatrix();
+    // RotationWire->rotateY(90.0*deg);
+    // RotationWire->rotateX(angle);
+      
+    new G4PVPlacement(RotationWire,
+		      G4ThreeVector(0, WirePosition, 0), 
+		      Wire_log,
+		      "Wire", 
+		      MWPCWiresGas_log, 
+		      false, 
+		      WireUniqueID, 
+		      fChkOvLaps
+		      );
+  }
+}
+//good a priori
+void G4SBSTrackerBuilder::BuildMWPCCathode(G4LogicalVolume *motherlog, G4double deltax, G4double deltay, G4double zPos)
+{
+  G4Box* MWPCCathode_solid_base = 
+    new G4Box("MWPCCathode_solid_base", 
+	      deltax*0.5, deltay*0.5, 
+	      fMWPC_CathodeMylarThickness*0.5+fMWPC_CathodeAlThickness);
+  
+  G4LogicalVolume* MWPCCathode_log = 
+    new G4LogicalVolume(MWPCCathode_solid_base,
+			GetMaterial("Mylar"),
+			"MWPCCathode_log");
+
+  G4Box* MWPCCathodeAlCoating_solid_base = 
+    new G4Box("MWPCCathodeAlCoating_solid_base", 
+	       deltax*0.5, deltay*0.5, 
+	      fMWPC_CathodeAlThickness*0.5);
+  
+  G4LogicalVolume* MWPCCathodeAlCoating_log = 
+    new G4LogicalVolume(MWPCCathodeAlCoating_solid_base,
+			GetMaterial("Aluminum"),
+			"MWPCCathodeAlCoating_log");
+  
+  for(int k = 0; k<2; k++){
+    new G4PVPlacement(0, 
+		      G4ThreeVector(0.0, 0.0, pow(-1, k) * (fMWPC_CathodeMylarThickness*0.5-fMWPC_CathodeAlThickness*0.5) ), 
+		      MWPCCathodeAlCoating_log,
+		      "MWPCCathodeAlCoating_phys", 
+		      MWPCCathode_log, 
+		      false, 
+		      0, 
+		      fChkOvLaps);
+  }
+  
+  new G4PVPlacement(0, 
+		    G4ThreeVector(0.0, 0.0, zPos), 
+		    MWPCCathode_log,
+		    "MWPCCathode_phys", 
+		    motherlog, 
+		    false, 
+		    0, 
+		    fChkOvLaps);
+
+  G4VisAttributes *cathode_visatt = new G4VisAttributes( G4Colour( 0.8, 0.75, 0.0) );
+  cathode_visatt->SetForceWireframe(true);
+  MWPCCathode_log->SetVisAttributes( cathode_visatt );
+  
+  MWPCCathodeAlCoating_log->SetVisAttributes( G4VisAttributes::GetInvisible() );
+}
+//good a priori
+void G4SBSTrackerBuilder::BuildMWPCG10Support(G4LogicalVolume *motherlog, G4double deltax, G4double deltay, G4double zPos)
+{
+  G4Box* MWPCSupport_LR = 
+    new G4Box("MWPCSupport_LR", 
+	      fMWPC_SupportWidth*0.5, 
+	      deltay*0.5+fMWPC_SupportWidth, 
+	      fMWPC_SupportThickness*0.5);
+  
+  G4Box* MWPCSupport_TB = 
+    new G4Box("MWPCSupport_TB", 
+	      deltax*0.5,
+	      fMWPC_SupportWidth*0.5, 
+	      fMWPC_SupportThickness*0.5);
+  
+  
+  G4LogicalVolume* MWPCSupport_LR_log = 
+    new G4LogicalVolume(MWPCSupport_LR,
+			GetMaterial("NEMAG10"),
+			"MWPCSupport_log");
+  
+  G4LogicalVolume* MWPCSupport_TB_log = 
+    new G4LogicalVolume(MWPCSupport_TB,
+			GetMaterial("NEMAG10"),
+			"MWPCSupport_log");
+  
+  new G4PVPlacement(0, 
+		    G4ThreeVector(-(deltax+fMWPC_SupportWidth)*0.5, 0.0, zPos), 
+		    MWPCSupport_LR_log,
+		    "MWPCSupport_L_phys", 
+		    motherlog, 
+		    false, 
+		    0, 
+		    fChkOvLaps);
+
+  new G4PVPlacement(0, 
+		    G4ThreeVector(+(deltax+fMWPC_SupportWidth)*0.5, 0.0, zPos), 
+		    MWPCSupport_LR_log,
+		    "MWPCSupport_R_phys", 
+		    motherlog, 
+		    false, 
+		    0, 
+		    fChkOvLaps);
+
+  new G4PVPlacement(0, 
+		    G4ThreeVector(0.0, -(deltay+fMWPC_SupportWidth)*0.5, zPos), 
+		    MWPCSupport_TB_log,
+		    "MWPCSupport_B_phys", 
+		    motherlog, 
+		    false, 
+		    0, 
+		    fChkOvLaps);
+
+  new G4PVPlacement(0, 
+		    G4ThreeVector(0.0, +(deltay+fMWPC_SupportWidth)*0.5, zPos), 
+		    MWPCSupport_TB_log,
+		    "MWPCSupport_T_phys", 
+		    motherlog, 
+		    false, 
+		    0, 
+		    fChkOvLaps);
+
+  G4VisAttributes *support_visatt = new G4VisAttributes( G4Colour( 1.0, 0.0, 1.0) );
+  support_visatt->SetForceWireframe(true);
+  MWPCSupport_LR_log->SetVisAttributes( support_visatt );
+  MWPCSupport_TB_log->SetVisAttributes( support_visatt );
+ 
+}

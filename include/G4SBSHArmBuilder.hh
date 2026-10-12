@@ -58,6 +58,7 @@ public:
   void MakeRICH(G4LogicalVolume *);
   void MakeRICH_new(G4LogicalVolume *, bool extended_snout = false);
   void MakeTracker(G4LogicalVolume *, G4int nplanes = 5);
+  void MakeTracker_MWPC(G4LogicalVolume *, G4int nplanes = 5);
   void MakeGEpFPP(G4LogicalVolume *);
   //void MakeGEpFPP_BB( G4LogicalVolume *);
   void MakeTracker_A1n(G4LogicalVolume *);

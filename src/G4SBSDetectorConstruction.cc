@@ -487,6 +487,31 @@ void G4SBSDetectorConstruction::ConstructMaterials(){
 
   fMaterialsMap["GEMgas"] = GEMgas;
 
+  G4double MWPCGasTemp = 296.15*kelvin;//K
+  G4double MWPCGasPressure = 1.0*atmosphere;//atm
+  
+  G4double density_CH4 = MWPCGasPressure*((12.0107+4*1.0079)*g/Avogadro)/(MWPCGasTemp*k_Boltzmann);
+  G4Material *CH4 = new G4Material("CH4", density_CH4, nel=2 );
+  CH4->AddElement(elC, 1);
+  CH4->AddElement(elH, 4);
+  fMaterialsMap["CH4"] = CH4;
+
+  G4double density_4He = MWPCGasPressure*(4.0026*g/Avogadro)/(MWPCGasTemp*k_Boltzmann);
+  G4cout << "Density of Helium (g/cm3): " << density_4He/(g/cm3) << G4endl;
+  G4Material *ref4He = new G4Material("ref4He", density_4He, 1 );
+  ref4He->AddElement(el4He, 1);
+  
+  G4double MWPCCH4GasFraction = 0.3;//fraction of 1
+  G4double MWPCHeGasFraction = 0.7;//fraction of 1
+
+  G4double density_MWPCgas = MWPCHeGasFraction*density_4He+MWPCCH4GasFraction*density_CH4;
+  G4Material *MWPCgas= new G4Material("MWPCgas", density_MWPCgas, nel=2);
+  MWPCgas->AddMaterial(ref4He, MWPCHeGasFraction*density_4He/density_MWPCgas) ;
+  MWPCgas->AddMaterial(CH4, MWPCCH4GasFraction*density_CH4/density_MWPCgas) ;
+  fMaterialsMap["MWPCgas"] = MWPCgas;
+  
+  fMaterialsMap["Tungsten"] = new G4Material("Tungsten",    z=74., a= 183.85*g/mole, density= 19.30*g/cm3);
+  
   //G4Material *Copper= new G4Material("Copper", z=29, a=   63.55*g/mole, density = 8.96*g/cm3);
   G4Material *Copper = man->FindOrBuildMaterial( "G4_Cu" );
   fMaterialsMap["Copper"] = Copper;
@@ -558,13 +583,6 @@ void G4SBSDetectorConstruction::ConstructMaterials(){
 
   fMaterialsMap["LD2"] = LD2mat;
   
-  //TPC/future targets? material
-  gasden = 0.1*atmosphere*(4.0026*g/Avogadro)/(300*kelvin*k_Boltzmann);
-  G4Material *ref4He = new G4Material("ref4He", gasden, 1 );
-  ref4He->AddElement(el4He, 1);
-
-  fMaterialsMap["ref4He"] = ref4He;
-
   // GEn polarized 3He materials (D Flay, July 2020)  
   // - includes materials for the full geometry
   // - most materials already defined above; adding carbon steel, 
