@@ -1317,19 +1317,19 @@ void G4SBSTargetBuilder::BuildGEpScatCham(G4LogicalVolume *worldlog ){
 
 
 
-    G4RotationMatrix *rot_copper = new G4RotationMatrix;
+    // G4RotationMatrix *rot_copper = new G4RotationMatrix;
 
-    rot_copper->rotateY( 17.0*deg + 4.4*deg);
+    // rot_copper->rotateY( 17.0*deg + 4.4*deg);
 
-    G4Box *copper_shield = new G4Box("copper_shield", (22.0*2.54*cm)/2.0, (22.0*2.54*cm)/2.0, (2.54*cm)/2.0);
+    // G4Box *copper_shield = new G4Box("copper_shield", (22.0*2.54*cm)/2.0, (22.0*2.54*cm)/2.0, (2.54*cm)/2.0);
 
-    G4LogicalVolume *copper_shield_log = new G4LogicalVolume( copper_shield, GetMaterial("Copper"), "copper_shield_log" );
+    // G4LogicalVolume *copper_shield_log = new G4LogicalVolume( copper_shield, GetMaterial("Copper"), "copper_shield_log" );
 
-    //new G4PVPlacement( rot_copper, copper_shield_pos, copper_shield_log, "copper_shield_phys", motherlog, false, 0, fals
+    // //new G4PVPlacement( rot_copper, copper_shield_pos, copper_shield_log, "copper_shield_phys", motherlog, false, 0, fals
     
-    G4ThreeVector copper_shield_pos( (HarmCutout_pos_global.getX() + 2.0*cm), HarmCutout_pos_global.getY(), (HarmCutout_pos_global.getZ() + 7.0*cm) ); 
+    // G4ThreeVector copper_shield_pos( (HarmCutout_pos_global.getX() + 2.0*cm), HarmCutout_pos_global.getY(), (HarmCutout_pos_global.getZ() + 7.0*cm) ); 
 
-    new G4PVPlacement( rot_copper, copper_shield_pos, copper_shield_log, "copper_shield_phys", worldlog, false, 0 );
+    // new G4PVPlacement( rot_copper, copper_shield_pos, copper_shield_log, "copper_shield_phys", worldlog, false, 0 );
   }
   //What's next? Define scattering chamber vacuum volume:
   G4double ScatChamberRadius = 23.80*inch;
@@ -2527,31 +2527,32 @@ void G4SBSTargetBuilder::BuildGEnTarget(G4LogicalVolume *motherLog){
 
   //For now, omit TBD details of everything other than target for SIDIS:
   if( fDetCon->fExpType == G4SBS::kGEN || fDetCon->fExpType == G4SBS::kSIDISExp || fDetCon->fExpType == G4SBS::kALL ){
-   
-    BuildGEnTarget_HelmholtzCoils(config,"maj",motherLog);
-    BuildGEnTarget_HelmholtzCoils(config,"rfy",motherLog);
-    BuildGEnTarget_HelmholtzCoils(config,"min",motherLog);
 
-    // magnetic shield
-    BuildGEnTarget_Shield(config,motherLog);
+    if( fDetCon->fExpType != G4SBS::kSIDISExp ){ //Don't make HH coils for SIDIS for the time being! 
+      BuildGEnTarget_HelmholtzCoils(config,"maj",motherLog);
+      BuildGEnTarget_HelmholtzCoils(config,"rfy",motherLog);
+      BuildGEnTarget_HelmholtzCoils(config,"min",motherLog);
 
-    // target ladder 
-    BuildGEnTarget_LadderPlate(motherLog);
+      // magnetic shield (I can only assume this means the target enclosure!) 
+      BuildGEnTarget_Shield(config,motherLog);
+      
+      // target ladder 
+      BuildGEnTarget_LadderPlate(motherLog);
 
-    // pickup coils 
-    BuildGEnTarget_PickupCoils(motherLog);
+      // pickup coils 
+      BuildGEnTarget_PickupCoils(motherLog);
 
+      // ion chamber (for test purposes) 
+      bool enableIC = fDetCon->GetIonChamberEnable(); 
+      if(enableIC) BuildGEnTarget_IonChamber(motherLog); 
 
-    // ion chamber (for test purposes) 
-    bool enableIC = fDetCon->GetIonChamberEnable(); 
-    if(enableIC) BuildGEnTarget_IonChamber(motherLog); 
-
-    // beam collimator (for test purposes) 
-    bool enableBC_dnstr = fDetCon->GetBeamCollimatorEnable_dnstr(); 
-    bool enableBC_upstr = fDetCon->GetBeamCollimatorEnable_upstr(); 
-    if(enableBC_dnstr) BuildGEnTarget_BeamCollimator(motherLog,0); 
-    if(enableBC_upstr) BuildGEnTarget_BeamCollimator(motherLog,1); 
-
+      // beam collimator (for test purposes) 
+      bool enableBC_dnstr = fDetCon->GetBeamCollimatorEnable_dnstr(); 
+      bool enableBC_upstr = fDetCon->GetBeamCollimatorEnable_upstr(); 
+      if(enableBC_dnstr) BuildGEnTarget_BeamCollimator(motherLog,0); 
+      if(enableBC_upstr) BuildGEnTarget_BeamCollimator(motherLog,1); 
+    }
+    
     if(fUseHadronFilter){
       // Numbers come from Glass cell and hadron filter. These should not be
       // hard coded but this is how it is for now. Should make it more 
