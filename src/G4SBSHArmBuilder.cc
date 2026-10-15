@@ -116,6 +116,8 @@ G4SBSHArmBuilder::G4SBSHArmBuilder(G4SBSDetectorConstruction *dc):G4SBSComponent
   fCDetReady = false; //default to false for both of these
   
   fUseNeutronVeto=false;
+
+  fUseLeadWallConnected = true;
   
   assert(fDetCon);
 }
@@ -1060,7 +1062,9 @@ void G4SBSHArmBuilder::MakeSBSFieldClamps( G4LogicalVolume *motherlog ){
     
       */
 
-      G4ThreeVector zaxis_temp( -sin(16.9*deg), 0, cos(16.9*deg) );
+
+      //DON'T HARDCODE THIS:
+      G4ThreeVector zaxis_temp( -sin(f48D48ang), 0, cos(f48D48ang) );
       G4ThreeVector yaxis_temp(0,1,0);
       G4ThreeVector xaxis_temp = (yaxis_temp.cross(zaxis_temp)).unit(); 
 
@@ -4804,7 +4808,7 @@ void G4SBSHArmBuilder::MakePolarimeterGEnRP(G4LogicalVolume *worldlog)
   if( fDetCon->fExpType != G4SBS::kGEN) {  
     G4ThreeVector actana_pos = pos + G4ThreeVector( 0.0, 0.0, (actanadist + actanadepth/2.0) );
     
-    G4Box*           actanabox  = new G4Box("actanabox", actanawidth/2.0, actanaheight/2.0, actanadepth/2.0 );
+    G4Box*           actanabox  = new G4Box("actanabox", actanawidth/2.0+0.05*mm, actanaheight/2.0+0.05*mm, actanadepth/2.0+0.05*mm );
     G4LogicalVolume* actanalog  = new G4LogicalVolume(actanabox, GetMaterial("Air"), "actanalog");
     
     if( fGEnRP_analyzer_option == 2 ) {   // long axis parallel to neutron direction
