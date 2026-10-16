@@ -49,7 +49,7 @@ G4SBSECal::G4SBSECal(G4SBSDetectorConstruction *dc):G4SBSComponent(dc){
   fAng = 29.0*deg;
   fDist = 4.9*m;
   fVOff = 0.0*cm;
-  fHOff = -2.341*2.54*cm;//default ecal positioning along crystal center
+  fHOff = -2.34115*2.54*cm;//default ecal positioning along crystal center
 
   fnzsegments_leadglass_ECAL = 1;
   fnzsegments_leadglass_C16 = 1;
@@ -991,6 +991,8 @@ void G4SBSECal::MakeECal_new(G4LogicalVolume *motherlog){
   // Pointer to SDmanager, used frequently in this routine
   G4SDManager *sdman = fDetCon->fSDman;
 
+  G4double airgap_horiz_SM = 0.0632*cm; //This amount of air gap between SM should match average horizontal block spacing in g4sbs to Don Jones' measurements on the as-built ECAL;
+  
   G4double width_42 = 4.25*cm;
   G4double width_40 = 4.0*cm;
   
@@ -1287,9 +1289,15 @@ void G4SBSECal::MakeECal_new(G4LogicalVolume *motherlog){
 			       -50.81*cm, -50.81*cm, -50.81*cm, -50.81*cm, -50.81*cm, -50.81*cm, -50.81*cm, -50.81*cm, -50.81*cm, -58.60*cm,
 			       -54.97*cm, -58.76*cm, -55.13*cm};// from bottom to top
   */
-  G4double yfp_start_42[23] = {-58.73*cm, -54.61*cm, -58.73*cm, -54.61*cm, -58.89*cm, -52.87*cm, -53.02*cm, -53.02*cm, -53.02*cm, -53.02*cm, 
-			       -53.02*cm, -53.02*cm, -53.02*cm, -53.02*cm, -53.02*cm, -53.02*cm, -53.02*cm, -53.02*cm, -53.02*cm, -58.73*cm,
-			       -54.29*cm, -58.73*cm, -54.29*cm};// from bottom to top, make these match center frame measurement from Don Jones, thus the user command shift is relative to frame center, by default this shift is -2.25in to put ecal at crystal center
+  // G4double yfp_start_42[23] = {-58.73*cm, -54.61*cm, -58.73*cm, -54.61*cm, -58.89*cm, -52.87*cm, -53.02*cm, -53.02*cm, -53.02*cm, -53.02*cm, 
+  // 			       -53.02*cm, -53.02*cm, -53.02*cm, -53.02*cm, -53.02*cm, -53.02*cm, -53.02*cm, -53.02*cm, -53.02*cm, -58.73*cm,
+  // 			       -54.29*cm, -58.73*cm, -54.29*cm};// from bottom to top, make these match center frame measurement from Don Jones, thus the user command shift is relative to frame center, by default this shift is -2.25in to put ecal at crystal center
+
+  G4double yfp_start_42[23] = { -58.697*cm, -54.577*cm, -58.697*cm, -54.577*cm, -58.857*cm, -52.837*cm, -52.987*cm, -52.987*cm, -52.987*cm, -52.987*cm,
+				-52.987*cm, -52.987*cm, -52.987*cm, -52.987*cm, -52.987*cm, -52.987*cm, -52.987*cm, -52.987*cm, -52.987*cm, -58.697*cm,
+				-54.257*cm, -58.697*cm, -54.257*cm }; //AJRP 9/21/2026: add ~0.03 cm to all the yfp_start values to get the ECAL block positions to match ideal "frame center" alignment. This way the existing survey offsets in the example scripts should still work (more or less) correctly, at the ~micron level anyway. 
+  
+  
   //for(int i = 0; i < 23; i++){
   //yfp_start_42[i] += (fHOff + 2.25*2.54*cm);
   //}
@@ -1385,23 +1393,23 @@ void G4SBSECal::MakeECal_new(G4LogicalVolume *motherlog){
   G4LogicalVolume *inactiveGlsL21_log = new G4LogicalVolume( inactiveGlsL21, GetMaterial("TF1_dead"), "inactiveGlsL21_log" );
   G4LogicalVolume *inactiveGlsL22_log = new G4LogicalVolume( inactiveGlsL22, GetMaterial("TF1_dead"), "inactiveGlsL22_log" );
   
-  new G4PVPlacement( 0, G4ThreeVector( yfp_start_42[0] + width42*Nblocks_per_rowSM_42[0] + widthGlsL0/2.0 , xfpstart + (1*height42/2.0) , zfront_ECAL + (depthInactive/2.0) - zOffset42), inactiveGlsL0_log, "inactiveGlsL0_phys", earm_mother_log, false, 0 );
-  new G4PVPlacement( 0, G4ThreeVector( yfp_start_42[1] + width42*Nblocks_per_rowSM_42[1] + widthGlsL1/2.0 , xfpstart + (3*height42/2.0) , zfront_ECAL + (depthInactive/2.0) - zOffset42), inactiveGlsL1_log, "inactiveGlsL1_phys", earm_mother_log, false, 0 );
-  new G4PVPlacement( 0, G4ThreeVector( yfp_start_42[2] + width42*Nblocks_per_rowSM_42[2] + widthGlsL2/2.0 , xfpstart + (5*height42/2.0) , zfront_ECAL + (depthInactive/2.0) - zOffset42), inactiveGlsL2_log, "inactiveGlsL2_phys", earm_mother_log, false, 0 );
-  new G4PVPlacement( 0, G4ThreeVector( yfp_start_42[3] + width42*Nblocks_per_rowSM_42[3] + widthGlsL3/2.0 , xfpstart + (7*height42/2.0) , zfront_ECAL + (depthInactive/2.0) - zOffset42), inactiveGlsL3_log, "inactiveGlsL3_phys", earm_mother_log, false, 0 );
-  new G4PVPlacement( 0, G4ThreeVector( yfp_start_42[4] + width42*Nblocks_per_rowSM_42[4] + widthGlsL4/2.0 , xfpstart + (9*height42/2.0) , zfront_ECAL + (depthInactive/2.0) - zOffset42), inactiveGlsL4_log, "inactiveGlsL4_phys", earm_mother_log, false, 0 );
-  new G4PVPlacement( 0, G4ThreeVector( yfp_start_42[5] + width42*Nblocks_per_rowSM_42[5] + widthGlsL5/2.0 , xfpstart + (11*height42/2.0) , zfront_ECAL + (depthInactive/2.0) - zOffset42), inactiveGlsL5_log, "inactiveGlsL5_phys", earm_mother_log, false, 0 );
+  new G4PVPlacement( 0, G4ThreeVector( yfp_start_42[0] + (width42+airgap_horiz_SM)*Nblocks_per_rowSM_42[0] + widthGlsL0/2.0 , xfpstart + (1*height42/2.0) , zfront_ECAL + (depthInactive/2.0) - zOffset42), inactiveGlsL0_log, "inactiveGlsL0_phys", earm_mother_log, false, 0 );
+  new G4PVPlacement( 0, G4ThreeVector( yfp_start_42[1] + (width42+airgap_horiz_SM)*Nblocks_per_rowSM_42[1] + widthGlsL1/2.0 , xfpstart + (3*height42/2.0) , zfront_ECAL + (depthInactive/2.0) - zOffset42), inactiveGlsL1_log, "inactiveGlsL1_phys", earm_mother_log, false, 0 );
+  new G4PVPlacement( 0, G4ThreeVector( yfp_start_42[2] + (width42+airgap_horiz_SM)*Nblocks_per_rowSM_42[2] + widthGlsL2/2.0 , xfpstart + (5*height42/2.0) , zfront_ECAL + (depthInactive/2.0) - zOffset42), inactiveGlsL2_log, "inactiveGlsL2_phys", earm_mother_log, false, 0 );
+  new G4PVPlacement( 0, G4ThreeVector( yfp_start_42[3] + (width42+airgap_horiz_SM)*Nblocks_per_rowSM_42[3] + widthGlsL3/2.0 , xfpstart + (7*height42/2.0) , zfront_ECAL + (depthInactive/2.0) - zOffset42), inactiveGlsL3_log, "inactiveGlsL3_phys", earm_mother_log, false, 0 );
+  new G4PVPlacement( 0, G4ThreeVector( yfp_start_42[4] + (width42+airgap_horiz_SM)*Nblocks_per_rowSM_42[4] + widthGlsL4/2.0 , xfpstart + (9*height42/2.0) , zfront_ECAL + (depthInactive/2.0) - zOffset42), inactiveGlsL4_log, "inactiveGlsL4_phys", earm_mother_log, false, 0 );
+  new G4PVPlacement( 0, G4ThreeVector( yfp_start_42[5] + (width42+airgap_horiz_SM)*Nblocks_per_rowSM_42[5] + widthGlsL5/2.0 , xfpstart + (11*height42/2.0) , zfront_ECAL + (depthInactive/2.0) - zOffset42), inactiveGlsL5_log, "inactiveGlsL5_phys", earm_mother_log, false, 0 );
 
   for( int i = 6; i < 18; i++ ){
 
-    new G4PVPlacement( 0, G4ThreeVector( yfp_start_42[i] + width42*Nblocks_per_rowSM_42[i] + widthGlsL6_17/2.0 , xfpstart + (((i*2)+1)*height42/2.0) , zfront_ECAL + (depthInactive/2.0) - zOffset42), inactiveGlsL6_17_log, "inactiveGlsL6_17_phys", earm_mother_log, false, 12 );
+    new G4PVPlacement( 0, G4ThreeVector( yfp_start_42[i] + (width42+airgap_horiz_SM)*Nblocks_per_rowSM_42[i] + widthGlsL6_17/2.0 , xfpstart + (((i*2)+1)*height42/2.0) , zfront_ECAL + (depthInactive/2.0) - zOffset42), inactiveGlsL6_17_log, "inactiveGlsL6_17_phys", earm_mother_log, false, 12 );
 
   }
-  new G4PVPlacement( 0, G4ThreeVector( yfp_start_42[18] + width42*Nblocks_per_rowSM_42[18] + widthGlsL18/2.0 , xfpstart + (37*height42/2.0) , zfront_ECAL + (depthInactive/2.0) - zOffset42), inactiveGlsL18_log, "inactiveGlsL18_phys", earm_mother_log, false, 0 );
-  new G4PVPlacement( 0, G4ThreeVector( yfp_start_42[19] + width42*Nblocks_per_rowSM_42[19] + widthGlsL19/2.0 , xfpstart + (39*height42/2.0) , zfront_ECAL + (depthInactive/2.0) - zOffset42), inactiveGlsL19_log, "inactiveGlsL19_phys", earm_mother_log, false, 0 );
-  new G4PVPlacement( 0, G4ThreeVector( yfp_start_42[20] + width42*Nblocks_per_rowSM_42[20] + widthGlsL20/2.0 , xfpstart + (41*height42/2.0) , zfront_ECAL + (depthInactive/2.0) - zOffset42), inactiveGlsL20_log, "inactiveGlsL20_phys", earm_mother_log, false, 0 );
-  new G4PVPlacement( 0, G4ThreeVector( yfp_start_42[21] + width42*Nblocks_per_rowSM_42[21] + widthGlsL21/2.0 , xfpstart + (43*height42/2.0) , zfront_ECAL + (depthInactive/2.0) - zOffset42), inactiveGlsL21_log, "inactiveGlsL21_phys", earm_mother_log, false, 0 );
-  new G4PVPlacement( 0, G4ThreeVector( yfp_start_42[22] + width42*Nblocks_per_rowSM_42[22] + widthGlsL22/2.0 , xfpstart + (45*height42/2.0) , zfront_ECAL + (depthInactive/2.0) - zOffset42), inactiveGlsL22_log, "inactiveGlsL22_phys", earm_mother_log, false, 0 ); 
+  new G4PVPlacement( 0, G4ThreeVector( yfp_start_42[18] + (width42+airgap_horiz_SM)*Nblocks_per_rowSM_42[18] + widthGlsL18/2.0 , xfpstart + (37*height42/2.0) , zfront_ECAL + (depthInactive/2.0) - zOffset42), inactiveGlsL18_log, "inactiveGlsL18_phys", earm_mother_log, false, 0 );
+  new G4PVPlacement( 0, G4ThreeVector( yfp_start_42[19] + (width42+airgap_horiz_SM)*Nblocks_per_rowSM_42[19] + widthGlsL19/2.0 , xfpstart + (39*height42/2.0) , zfront_ECAL + (depthInactive/2.0) - zOffset42), inactiveGlsL19_log, "inactiveGlsL19_phys", earm_mother_log, false, 0 );
+  new G4PVPlacement( 0, G4ThreeVector( yfp_start_42[20] + (width42+airgap_horiz_SM)*Nblocks_per_rowSM_42[20] + widthGlsL20/2.0 , xfpstart + (41*height42/2.0) , zfront_ECAL + (depthInactive/2.0) - zOffset42), inactiveGlsL20_log, "inactiveGlsL20_phys", earm_mother_log, false, 0 );
+  new G4PVPlacement( 0, G4ThreeVector( yfp_start_42[21] + (width42+airgap_horiz_SM)*Nblocks_per_rowSM_42[21] + widthGlsL21/2.0 , xfpstart + (43*height42/2.0) , zfront_ECAL + (depthInactive/2.0) - zOffset42), inactiveGlsL21_log, "inactiveGlsL21_phys", earm_mother_log, false, 0 );
+  new G4PVPlacement( 0, G4ThreeVector( yfp_start_42[22] + (width42+airgap_horiz_SM)*Nblocks_per_rowSM_42[22] + widthGlsL22/2.0 , xfpstart + (45*height42/2.0) , zfront_ECAL + (depthInactive/2.0) - zOffset42), inactiveGlsL22_log, "inactiveGlsL22_phys", earm_mother_log, false, 0 ); 
 
   //right side of inactive pb glass
 
@@ -1903,7 +1911,7 @@ void G4SBSECal::MakeECal_new(G4LogicalVolume *motherlog){
       
       Y_block+= BlockSpace_42;
       // if(j_%3==2)Y_block+= 2*BlockFirst_42+2*TiWallThick-BlockSpace_42;
-      if(j_%3==2)Y_block+= 2*TiWallThick;
+      if(j_%3==2)Y_block+= 2*TiWallThick + airgap_horiz_SM;
       copy_nb++;
     }
     X_block+= BlockSpace_42;
